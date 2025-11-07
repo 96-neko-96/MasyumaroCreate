@@ -348,9 +348,12 @@ function initializeGeminiAI() {
 
 /**
  * プロンプトを生成
+ * @param {Array<string>} existingTopics - 既に生成されたメッセージのトピックリスト
+ * @param {number} messageNumber - 現在の生成番号（1から始まる）
+ * @param {number} totalCount - 生成する総数
  * @returns {string} 生成されたプロンプト
  */
-function generatePrompt() {
+function generatePrompt(existingTopics = [], messageNumber = 1, totalCount = 1) {
   const persona = personaSettings;
   const settings = messageTendency;
   const language = currentLanguage;
@@ -359,6 +362,28 @@ function generatePrompt() {
     const ageLabel = `${persona.age}代`;
     const viewerHistoryLabels = t('viewerHistoryLabels');
     const enthusiasmLabels = t('enthusiasmLabels');
+
+    // 既存トピックがある場合の追加指示
+    let diversityInstruction = '';
+    if (existingTopics.length > 0) {
+      diversityInstruction = `
+【重要：内容の多様性について】
+既に以下のようなトピックでメッセージが生成されています：
+${existingTopics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
+
+**必ず上記とは異なる話題・角度・トーンでメッセージを生成してください。**
+同じような内容や表現の繰り返しは避けてください。
+`;
+    }
+
+    // 複数件生成時の多様性のヒント
+    let varietyHint = '';
+    if (totalCount > 1) {
+      varietyHint = `
+- 多様な話題を心がける（例：配信内容への感想、質問、応援、日常の共有、相談、ネタ、提案など）
+- 異なる角度からアプローチする
+`;
+    }
 
     return `
 あなたは配信の視聴者です。以下のペルソナ情報に基づいて、配信者に送るマシュマロ（匿名メッセージ）を1件だけ生成してください。
@@ -372,7 +397,7 @@ function generatePrompt() {
 - 真面目度：${settings.seriousness}/5（1=ネタ寄り、5=真面目）
 - 距離感：${settings.distance}/5（1=遠慮がち、5=フレンドリー）
 - 文章量：${settings.length}/5（1=短文、5=長文）
-
+${diversityInstruction}
 【生成条件】
 - 日本語で生成してください
 - マシュマロの匿名メッセージとして自然な文章
@@ -382,7 +407,7 @@ function generatePrompt() {
 - 距離感に応じた敬語/タメ口の使い分け
 - 文章量の設定に応じて50〜300文字程度で調整
 - 絵文字は控えめに（0〜2個程度）
-- メッセージ本文のみを出力（説明や前置きは不要）
+- メッセージ本文のみを出力（説明や前置きは不要）${varietyHint}
 
 メッセージ:
 `;
@@ -403,6 +428,28 @@ function generatePrompt() {
       other: 'Other'
     };
 
+    // 既存トピックがある場合の追加指示
+    let diversityInstruction = '';
+    if (existingTopics.length > 0) {
+      diversityInstruction = `
+【IMPORTANT: Content Diversity】
+The following topics have already been generated:
+${existingTopics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
+
+**You MUST generate a message with a DIFFERENT topic, angle, or tone from the above.**
+Avoid repeating similar content or expressions.
+`;
+    }
+
+    // 複数件生成時の多様性のヒント
+    let varietyHint = '';
+    if (totalCount > 1) {
+      varietyHint = `
+- Aim for diverse topics (e.g., stream feedback, questions, encouragement, sharing daily life, advice requests, jokes, suggestions, etc.)
+- Approach from different angles
+`;
+    }
+
     return `
 You are a viewer of a live stream. Based on the following persona information, generate ONE anonymous message (like Marshmallow) to send to the streamer.
 
@@ -415,7 +462,7 @@ You are a viewer of a live stream. Based on the following persona information, g
 - Seriousness: ${settings.seriousness}/5 (1=joking, 5=serious)
 - Distance: ${settings.distance}/5 (1=reserved, 5=friendly)
 - Length: ${settings.length}/5 (1=short, 5=long)
-
+${diversityInstruction}
 【Generation Requirements】
 - Write in English
 - Natural message as anonymous feedback
@@ -425,7 +472,7 @@ You are a viewer of a live stream. Based on the following persona information, g
 - Adjust formality based on distance setting
 - Adjust length based on length setting (50-300 characters approximately)
 - Use emojis sparingly (0-2)
-- Output only the message text (no explanations or preambles)
+- Output only the message text (no explanations or preambles)${varietyHint}
 
 Message:
 `;
@@ -434,14 +481,17 @@ Message:
 
 /**
  * メッセージを生成（1件）
+ * @param {Array<string>} existingTopics - 既存のトピックリスト
+ * @param {number} messageNumber - メッセージ番号
+ * @param {number} totalCount - 生成する総数
  * @returns {Promise<string>} 生成されたメッセージ
  */
-async function generateSingleMessage() {
+async function generateSingleMessage(existingTopics = [], messageNumber = 1, totalCount = 1) {
   if (!initializeGeminiAI()) {
     throw new Error('API initialization failed');
   }
 
-  const prompt = generatePrompt();
+  const prompt = generatePrompt(existingTopics, messageNumber, totalCount);
 
   // Gemini API REST エンドポイント
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -515,10 +565,14 @@ async function generateMessages() {
   `;
   messagesContainer.appendChild(loadingCard);
 
+  // 既存トピックを追跡（このセッションで生成されたメッセージの要約）
+  const generatedTopics = [];
+
   // メッセージを順次生成
   for (let i = 0; i < count; i++) {
     try {
-      const messageText = await generateSingleMessage();
+      // 既存トピックと現在の番号、総数を渡して生成
+      const messageText = await generateSingleMessage(generatedTopics, i + 1, count);
 
       // メッセージを保存
       const message = {
@@ -528,6 +582,13 @@ async function generateMessages() {
         timestamp: new Date().toISOString(),
       };
       messages.push(message);
+
+      // 生成されたメッセージのトピック（簡易版）を記録
+      // 最初の50文字または全文（短い場合）を使用
+      const topicSummary = messageText.length > 50
+        ? messageText.substring(0, 50) + '...'
+        : messageText;
+      generatedTopics.push(topicSummary);
 
       // メッセージカードを表示
       displayMessage(message);
