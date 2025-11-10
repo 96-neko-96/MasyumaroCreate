@@ -284,6 +284,25 @@
         <div class="subsection">
           <h3 class="subsection-title" data-i18n="generateSettings">生成設定</h3>
 
+          <!-- Message Type -->
+          <div class="form-group">
+            <label for="messageTypeSelect" data-i18n="messageType">メッセージタイプ</label>
+            <select id="messageTypeSelect" class="form-select">
+              <option value="random" data-i18n="messageType_random">ランダム（ミックス）</option>
+              <option value="support" data-i18n="messageType_support">応援・感謝</option>
+              <option value="question_private" data-i18n="messageType_question_private">質問（プライベート）</option>
+              <option value="question_stream" data-i18n="messageType_question_stream">質問（配信・活動）</option>
+              <option value="question_advice" data-i18n="messageType_question_advice">悩み相談</option>
+              <option value="request" data-i18n="messageType_request">リクエスト・提案</option>
+              <option value="reaction" data-i18n="messageType_reaction">感想・反応</option>
+              <option value="sympathy" data-i18n="messageType_sympathy">共感・同意</option>
+              <option value="kusomaro" data-i18n="messageType_kusomaro">クソマロ（ネタ）</option>
+              <option value="chat" data-i18n="messageType_chat">雑談投げかけ</option>
+              <option value="serious" data-i18n="messageType_serious">重め・告白系</option>
+            </select>
+            <p class="message-type-description" id="messageTypeDescription"></p>
+          </div>
+
           <div class="form-group">
             <label for="countInput" data-i18n="count">生成件数</label>
             <input
