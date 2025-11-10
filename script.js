@@ -60,8 +60,35 @@ const translations = {
 
     // 生成設定
     generateSettings: "生成設定",
+    messageType: "メッセージタイプ",
     count: "生成件数",
     generateButton: "🎲 メッセージを生成",
+
+    // メッセージタイプ
+    messageType_random: "ランダム（ミックス）",
+    messageType_support: "応援・感謝",
+    messageType_question_private: "質問（プライベート）",
+    messageType_question_stream: "質問（配信・活動）",
+    messageType_question_advice: "悩み相談",
+    messageType_request: "リクエスト・提案",
+    messageType_reaction: "感想・反応",
+    messageType_sympathy: "共感・同意",
+    messageType_kusomaro: "クソマロ（ネタ）",
+    messageType_chat: "雑談投げかけ",
+    messageType_serious: "重め・告白系",
+
+    // メッセージタイプの説明
+    messageTypeDesc_random: "様々なタイプから自動選択。バリエーション豊かなメッセージが生成されます。",
+    messageTypeDesc_support: "「いつも見てます」「ありがとう」などの応援・感謝メッセージ。",
+    messageTypeDesc_question_private: "好きなもの、趣味、日常などプライベートな質問。",
+    messageTypeDesc_question_stream: "使用機材、配信のきっかけなど活動に関する質問。",
+    messageTypeDesc_question_advice: "人間関係や仕事の悩み、意見を求める相談メッセージ。",
+    messageTypeDesc_request: "「○○やってほしい」などのリクエストや企画提案。",
+    messageTypeDesc_reaction: "配信内容への感想やリアクション、フィードバック。",
+    messageTypeDesc_sympathy: "「わかる」「私も同じ」などの共感・同意メッセージ。",
+    messageTypeDesc_kusomaro: "ボケ、ツッコミ待ち、意味不明系のネタメッセージ。",
+    messageTypeDesc_chat: "「今日何食べました？」などの軽い雑談の話題。",
+    messageTypeDesc_serious: "ガチな告白や重い感謝、深刻な悩みなど真剣なメッセージ。",
 
     // UI設定
     uiSettings: "表示設定",
@@ -151,8 +178,35 @@ const translations = {
 
     // Generation Settings
     generateSettings: "Generation Settings",
+    messageType: "Message Type",
     count: "Count",
     generateButton: "🎲 Generate Messages",
+
+    // Message Types
+    messageType_random: "Random (Mixed)",
+    messageType_support: "Support & Thanks",
+    messageType_question_private: "Question (Personal)",
+    messageType_question_stream: "Question (Streaming)",
+    messageType_question_advice: "Ask for Advice",
+    messageType_request: "Request & Suggestion",
+    messageType_reaction: "Reaction & Feedback",
+    messageType_sympathy: "Sympathy & Agreement",
+    messageType_kusomaro: "Joke/Meme Message",
+    messageType_chat: "Casual Chat Topic",
+    messageType_serious: "Serious & Confession",
+
+    // Message Type Descriptions
+    messageTypeDesc_random: "Auto-select from various types. Generates diverse messages.",
+    messageTypeDesc_support: "Supportive messages like 'Always watching' or 'Thank you'.",
+    messageTypeDesc_question_private: "Personal questions about hobbies, preferences, daily life.",
+    messageTypeDesc_question_stream: "Questions about streaming setup, equipment, motivation.",
+    messageTypeDesc_question_advice: "Seeking advice about relationships, work, or life concerns.",
+    messageTypeDesc_request: "Requests like 'Please play this' or content suggestions.",
+    messageTypeDesc_reaction: "Feedback and reactions to stream content.",
+    messageTypeDesc_sympathy: "Empathetic messages like 'I relate' or 'Same here'.",
+    messageTypeDesc_kusomaro: "Playful jokes, memes, or absurd funny messages.",
+    messageTypeDesc_chat: "Light casual chat topics like 'What did you eat today?'.",
+    messageTypeDesc_serious: "Genuine confessions, deep gratitude, or serious concerns.",
 
     // UI Settings
     uiSettings: "Display Settings",
@@ -214,6 +268,7 @@ let messageTendency = {
 
 // Generation Settings
 let generationCount = 3;
+let messageType = 'random';
 
 // Message Storage
 let messages = [];
@@ -334,6 +389,7 @@ function updateUILanguage() {
   updateAgeLabel();
   updateViewerHistoryLabel();
   updateEnthusiasmLabel();
+  updateMessageTypeDescription();
 
   // 言語表示の更新
   document.getElementById('currentLang').textContent = currentLanguage.toUpperCase();
@@ -390,6 +446,181 @@ function initializeGeminiAI() {
 }
 
 /**
+ * メッセージタイプに応じたプロンプト指示を取得
+ * @param {string} type - メッセージタイプ
+ * @param {string} language - 言語 ('ja' or 'en')
+ * @returns {string} タイプ別のプロンプト指示
+ */
+function getMessageTypePrompt(type, language) {
+  if (language === 'ja') {
+    const typePrompts = {
+      random: `
+【メッセージタイプ】
+メッセージのタイプはランダムに決めてください。
+応援、質問、感想、ネタ、相談、雑談など、様々なバリエーションから自由に選んでください。`,
+
+      support: `
+【メッセージタイプ：応援・感謝】
+配信者への感謝や応援を伝える内容にしてください。
+- 「いつも見てます」「楽しみにしてます」「元気もらってます」のようなポジティブで温かいトーン
+- 具体的なエピソードを交えても良い（「昨日の配信で〜」など）
+- 励ましや応援の気持ちを込める`,
+
+      question_private: `
+【メッセージタイプ：質問（プライベート）】
+配信者のプライベートに関する質問をしてください。
+- 好きな食べ物、趣味、休日の過ごし方など
+- 興味を持って聞く自然な質問
+- プライバシーに踏み込みすぎない範囲で`,
+
+      question_stream: `
+【メッセージタイプ：質問（配信・活動）】
+配信活動に関する質問をしてください。
+- 使用機材、編集ソフト、配信のきっかけなど
+- 配信スタイルや今後の予定について
+- 技術的な質問や活動に関する興味`,
+
+      question_advice: `
+【メッセージタイプ：悩み相談】
+配信者に意見や助言を求める相談メッセージにしてください。
+- 人間関係、仕事、学業などの悩み
+- 「どう思いますか？」「アドバイスください」のような問いかけ
+- 深刻すぎず、配信で話せる程度の内容`,
+
+      request: `
+【メッセージタイプ：リクエスト・提案】
+配信者への�クエストや企画提案をしてください。
+- 「○○やってほしい」「○○の実況見たい」などのリクエスト
+- 新しい企画や配信内容の提案
+- 前向きで建設的なトーン`,
+
+      reaction: `
+【メッセージタイプ：感想・反応】
+最近の配信内容への感想やリアクションにしてください。
+- 「昨日の配信で〜」「前回の〜が面白かった」など
+- 具体的なシーンやセリフへの反応
+- 共感や楽しかった気持ちを表現`,
+
+      sympathy: `
+【メッセージタイプ：共感・同意】
+配信者の発言や行動への共感メッセージにしてください。
+- 「わかる」「私も同じ」「それな」のような共感
+- 配信で話していた内容への同意
+- 親近感を感じさせるトーン`,
+
+      kusomaro: `
+【メッセージタイプ：クソマロ（ネタ）】
+ツッコミ待ちのボケや面白おかしいネタメッセージにしてください。
+- 突拍子もない質問や意味不明系
+- 「配信者さんは実は宇宙人ですか？」のようなシュール な内容
+- 明らかにネタとわかる面白さ
+- 悪意はなく笑いを取りに行く感じ
+- ただし、真面目度の設定が高い場合は抑えめに`,
+
+      chat: `
+【メッセージタイプ：雑談投げかけ】
+気軽な雑談の話題を投げかけてください。
+- 「今日何食べました？」「最近どう？」のような軽い話題
+- 日常的な会話のきっかけ
+- フレンドリーで親しみやすいトーン`,
+
+      serious: `
+【メッセージタイプ：重め・告白系】
+真剣で重めの内容にしてください。
+- ガチな告白や深い感謝の気持ち
+- 配信者に救われた経験や影響を受けた話
+- 深刻な悩みや相談
+- 真摯で誠実なトーン`,
+    };
+
+    return typePrompts[type] || typePrompts.random;
+  } else {
+    // English
+    const typePrompts = {
+      random: `
+【Message Type】
+Choose the message type randomly.
+Feel free to select from various types: support, questions, feedback, jokes, advice requests, casual chat, etc.`,
+
+      support: `
+【Message Type: Support & Thanks】
+Create a supportive or grateful message for the streamer.
+- Positive and warm tone like "Always watching" "Looking forward to your streams" "You cheer me up"
+- Can include specific episodes or moments
+- Include encouragement and appreciation`,
+
+      question_private: `
+【Message Type: Question (Personal)】
+Ask a personal question about the streamer's private life.
+- Favorite foods, hobbies, how they spend their free time
+- Show genuine interest
+- Stay within respectful boundaries`,
+
+      question_stream: `
+【Message Type: Question (Streaming)】
+Ask a question about their streaming activities.
+- Equipment, editing software, what got them started
+- Stream style or future plans
+- Technical or activity-related curiosity`,
+
+      question_advice: `
+【Message Type: Ask for Advice】
+Seek advice or opinions from the streamer.
+- Concerns about relationships, work, studies
+- "What do you think?" "Any advice?" type questions
+- Keep it suitable for stream discussion`,
+
+      request: `
+【Message Type: Request & Suggestion】
+Make a request or suggest content to the streamer.
+- "Please play ○○" "Would love to see ○○"
+- New ideas or content suggestions
+- Positive and constructive tone`,
+
+      reaction: `
+【Message Type: Reaction & Feedback】
+React to or comment on recent stream content.
+- "Yesterday's stream..." "The last ○○ was great"
+- React to specific scenes or moments
+- Express enjoyment and engagement`,
+
+      sympathy: `
+【Message Type: Sympathy & Agreement】
+Express sympathy or agreement with the streamer.
+- "I relate" "Same here" "Totally agree"
+- Agreement with something discussed on stream
+- Create a sense of connection`,
+
+      kusomaro: `
+【Message Type: Joke/Meme Message】
+Create a playful joke or absurd funny message.
+- Random or surreal questions
+- "Are you secretly an alien?" type humor
+- Obviously joking, aiming for laughs
+- No malice, just trying to be funny
+- Tone down if seriousness setting is high`,
+
+      chat: `
+【Message Type: Casual Chat Topic】
+Throw out a casual chat topic.
+- "What did you eat today?" "How's it going?" type questions
+- Everyday conversation starters
+- Friendly and approachable tone`,
+
+      serious: `
+【Message Type: Serious & Confession】
+Create a serious or heartfelt message.
+- Genuine confession or deep gratitude
+- How the stream has helped or influenced you
+- Serious concerns or deep conversations
+- Sincere and earnest tone`,
+    };
+
+    return typePrompts[type] || typePrompts.random;
+  }
+}
+
+/**
  * プロンプトを生成
  * @param {Array<string>} existingTopics - 既に生成されたメッセージのトピックリスト
  * @param {number} messageNumber - 現在の生成番号（1から始まる）
@@ -419,6 +650,9 @@ ${existingTopics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
 `;
     }
 
+    // メッセージタイプの指示
+    const messageTypeInstruction = getMessageTypePrompt(messageType, language);
+
     // 複数件生成時の多様性のヒント
     let varietyHint = '';
     if (totalCount > 1) {
@@ -441,6 +675,7 @@ ${existingTopics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
 ❌ XX や [〜] などのプレースホルダー
 
 これらの記号を含むメッセージは完全に無効です。検出された場合は即座に拒否されます。
+${messageTypeInstruction}
 
 【ペルソナ情報】
 - 年齢：${ageLabel}
@@ -562,6 +797,7 @@ NEVER use the following placeholder symbols:
 ❌ XX or [~] or any placeholder symbols
 
 Messages containing these symbols are COMPLETELY INVALID. They will be immediately rejected if detected.
+${messageTypeInstruction}
 
 【Persona Information】
 - Age: ${ageLabel}
@@ -1019,6 +1255,7 @@ function exportSettings() {
     messageTendency: { ...messageTendency },
     generation: {
       count: generationCount,
+      messageType: messageType,
     },
     language: currentLanguage,
     theme: currentTheme,
@@ -1104,6 +1341,13 @@ function applySettings(settings) {
   if (settings.generation) {
     generationCount = settings.generation.count;
     document.getElementById('countInput').value = generationCount;
+
+    // メッセージタイプ（存在しない場合はデフォルト値）
+    if (settings.generation.messageType) {
+      messageType = settings.generation.messageType;
+      document.getElementById('messageTypeSelect').value = messageType;
+      updateMessageTypeDescription();
+    }
   }
 
   // 言語設定
@@ -1122,6 +1366,16 @@ function applySettings(settings) {
 }
 
 // ===== UI Update Functions =====
+
+/**
+ * メッセージタイプの説明文を更新
+ */
+function updateMessageTypeDescription() {
+  const selectedType = document.getElementById('messageTypeSelect').value;
+  const descriptionElement = document.getElementById('messageTypeDescription');
+  const descKey = `messageTypeDesc_${selectedType}`;
+  descriptionElement.textContent = t(descKey);
+}
 
 /**
  * 年齢ラベルを更新
@@ -1219,6 +1473,12 @@ function initializeEventListeners() {
     document.getElementById('lengthValue').textContent = e.target.value;
   });
 
+  // メッセージタイプ選択
+  document.getElementById('messageTypeSelect').addEventListener('change', (e) => {
+    messageType = e.target.value;
+    updateMessageTypeDescription();
+  });
+
   // 生成件数入力
   document.getElementById('countInput').addEventListener('input', (e) => {
     generationCount = parseInt(e.target.value);
@@ -1284,6 +1544,7 @@ function initializeApp() {
   updateAgeLabel();
   updateViewerHistoryLabel();
   updateEnthusiasmLabel();
+  updateMessageTypeDescription();
 
   console.log('MaroGem initialized successfully');
 }

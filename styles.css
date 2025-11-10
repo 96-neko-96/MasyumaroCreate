@@ -645,6 +645,16 @@ body {
   background: var(--accent);
 }
 
+/* ===== Message Type Description ===== */
+.message-type-description {
+  margin-top: var(--spacing-xs);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  min-height: 16px;
+}
+
 /* ===== Utility Classes ===== */
 .hidden {
   display: none !important;
