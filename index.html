@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MaroGem - Persona Maro Generator</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <h1 class="app-title" data-i18n="appTitle">ペルソナマロジェネレーター</h1>
+    <div class="header-controls">
+      <!-- Language Toggle -->
+      <button class="btn-icon" id="languageToggle" title="Language">
+        🌐 <span id="currentLang">JA</span>
+      </button>
+
+      <!-- Theme Toggle -->
+      <button class="btn-icon" id="themeToggle" title="Theme">
+        <span id="themeIcon">☀️</span>
+      </button>
+
+      <!-- Save Settings -->
+      <button class="btn-primary" id="saveSettingsBtn">
+        <span data-i18n="saveSettings">💾 設定を保存</span>
+      </button>
+
+      <!-- Load Settings -->
+      <button class="btn-primary" id="loadSettingsBtn">
+        <span data-i18n="loadSettings">📁 設定を読込</span>
+      </button>
+      <input type="file" id="loadSettingsInput" accept=".json" style="display: none;">
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Main Area (Message Display) -->
+    <main class="main-area">
+      <div class="messages-container" id="messagesContainer">
+        <!-- Welcome message -->
+        <div class="welcome-message" id="welcomeMessage">
+          <div class="welcome-content">
+            <h2>👋 <span data-i18n="welcomeTitle">ようこそ！</span></h2>
+            <p data-i18n="welcomeText">右側のパネルでペルソナを設定して、メッセージを生成してみましょう。</p>
+          </div>
+        </div>
+        <!-- Generated messages will be inserted here -->
+      </div>
+    </main>
+
+    <!-- Right Sidebar (Settings) -->
+    <aside class="sidebar">
+      <!-- API Settings Section -->
+      <section class="settings-section">
+        <h2 class="section-title" data-i18n="apiSettings">API設定</h2>
+
+        <div class="form-group">
+          <label for="modelSelect" data-i18n="model">モデル</label>
+          <select id="modelSelect" class="form-select">
+            <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
+            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+            <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="apiKeyInput" data-i18n="apiKey">APIキー</label>
+          <div class="api-key-container">
+            <input
+              type="password"
+              id="apiKeyInput"
+              class="form-input"
+              placeholder="sk-..."
+              data-i18n-placeholder="apiKeyPlaceholder"
+            >
+            <button class="btn-toggle-key" id="toggleApiKeyBtn" title="Show/Hide">
+              👁️
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Persona Settings Section -->
+      <section class="settings-section">
+        <h2 class="section-title" data-i18n="personaSettings">ペルソナ設定</h2>
+
+        <!-- Basic Info -->
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="basicInfo">基本情報</h3>
+
+          <!-- Age -->
+          <div class="form-group">
+            <label for="ageSlider">
+              <span data-i18n="age">年齢</span>:
+              <span id="ageValue" class="value-display">20代</span>
+            </label>
+            <input
+              type="range"
+              id="ageSlider"
+              class="slider"
+              min="10"
+              max="60"
+              step="10"
+              value="20"
+            >
+            <div class="slider-labels">
+              <span>10代</span>
+              <span>20代</span>
+              <span>30代</span>
+              <span>40代</span>
+              <span>50代</span>
+              <span>60代</span>
+            </div>
+          </div>
+
+          <!-- Gender -->
+          <div class="form-group">
+            <label data-i18n="gender">性別</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="gender" value="male" checked>
+                <span data-i18n="male">男性</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="gender" value="female">
+                <span data-i18n="female">女性</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="gender" value="other">
+                <span data-i18n="other">その他</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Occupation -->
+          <div class="form-group">
+            <label for="occupationSelect" data-i18n="occupation">職業</label>
+            <select id="occupationSelect" class="form-select">
+              <option value="student" data-i18n="student">学生</option>
+              <option value="employee" data-i18n="employee">会社員</option>
+              <option value="freelancer" data-i18n="freelancer">フリーランス</option>
+              <option value="homemaker" data-i18n="homemaker">主婦・主夫</option>
+              <option value="unemployed" data-i18n="unemployed">無職</option>
+              <option value="other" data-i18n="otherOccupation">その他</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Viewing Settings -->
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="viewingSettings">配信視聴設定</h3>
+
+          <!-- Viewer History -->
+          <div class="form-group">
+            <label for="viewerHistorySlider">
+              <span data-i18n="viewerHistory">視聴歴</span>:
+              <span id="viewerHistoryValue" class="value-display">新規</span>
+            </label>
+            <input
+              type="range"
+              id="viewerHistorySlider"
+              class="slider"
+              min="0"
+              max="4"
+              step="1"
+              value="2"
+            >
+            <div class="slider-labels-5">
+              <span class="small-label">新規</span>
+              <span class="small-label">数週間</span>
+              <span class="small-label">数ヶ月</span>
+              <span class="small-label">半年以上</span>
+              <span class="small-label">古参</span>
+            </div>
+          </div>
+
+          <!-- Enthusiasm -->
+          <div class="form-group">
+            <label for="enthusiasmSlider">
+              <span data-i18n="enthusiasm">熱量</span>:
+              <span id="enthusiasmValue" class="value-display">定期視聴</span>
+            </label>
+            <input
+              type="range"
+              id="enthusiasmSlider"
+              class="slider"
+              min="0"
+              max="4"
+              step="1"
+              value="2"
+            >
+            <div class="slider-labels-5">
+              <span class="small-label">ライト</span>
+              <span class="small-label">たまに</span>
+              <span class="small-label">定期</span>
+              <span class="small-label">熱心</span>
+              <span class="small-label">ガチ勢</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message Tendency -->
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="messageTendency">メッセージ傾向</h3>
+
+          <!-- Seriousness -->
+          <div class="form-group">
+            <label for="seriousnessSlider">
+              <span data-i18n="seriousness">真面目度</span>:
+              <span id="seriousnessValue" class="value-display">3</span>
+            </label>
+            <input
+              type="range"
+              id="seriousnessSlider"
+              class="slider"
+              min="1"
+              max="5"
+              step="1"
+              value="3"
+            >
+            <div class="slider-labels-edges">
+              <span data-i18n="joking">ネタ寄り</span>
+              <span data-i18n="serious">真面目</span>
+            </div>
+          </div>
+
+          <!-- Distance -->
+          <div class="form-group">
+            <label for="distanceSlider">
+              <span data-i18n="distance">距離感</span>:
+              <span id="distanceValue" class="value-display">3</span>
+            </label>
+            <input
+              type="range"
+              id="distanceSlider"
+              class="slider"
+              min="1"
+              max="5"
+              step="1"
+              value="3"
+            >
+            <div class="slider-labels-edges">
+              <span data-i18n="reserved">遠慮がち</span>
+              <span data-i18n="friendly">フレンドリー</span>
+            </div>
+          </div>
+
+          <!-- Length -->
+          <div class="form-group">
+            <label for="lengthSlider">
+              <span data-i18n="length">文章量</span>:
+              <span id="lengthValue" class="value-display">3</span>
+            </label>
+            <input
+              type="range"
+              id="lengthSlider"
+              class="slider"
+              min="1"
+              max="5"
+              step="1"
+              value="3"
+            >
+            <div class="slider-labels-edges">
+              <span data-i18n="short">短文</span>
+              <span data-i18n="long">長文</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generation Settings -->
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="generateSettings">生成設定</h3>
+
+          <div class="form-group">
+            <label for="countInput" data-i18n="count">生成件数</label>
+            <input
+              type="number"
+              id="countInput"
+              class="form-input"
+              min="1"
+              max="10"
+              value="3"
+            >
+          </div>
+
+          <button class="btn-generate" id="generateBtn">
+            <span data-i18n="generateButton">🎲 メッセージを生成</span>
+          </button>
+        </div>
+
+        <!-- UI Settings -->
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="uiSettings">表示設定</h3>
+
+          <div class="form-group">
+            <label data-i18n="uiTheme">UIテーマ</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="uiTheme" value="light" checked>
+                <span data-i18n="uiThemeLight">ライト</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="uiTheme" value="dark">
+                <span data-i18n="uiThemeDark">ダーク</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image Export Settings -->
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="imageSettings">画像保存設定</h3>
+
+          <div class="form-group">
+            <label data-i18n="imageTheme">画像のテーマ</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="imageTheme" value="light" checked>
+                <span data-i18n="imageThemeLight">ライト</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="imageTheme" value="dark">
+                <span data-i18n="imageThemeDark">ダーク</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span id="toastMessage"></span>
+  </div>
+
+  <!-- Main Script -->
+  <script src="script.js"></script>
+</body>
+</html>
