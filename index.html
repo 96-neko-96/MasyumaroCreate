@@ -280,6 +280,57 @@
           </div>
         </div>
 
+        <!-- Keyword Settings -->
+        <div class="subsection">
+          <h3 class="subsection-title collapsible" id="keywordSectionTitle">
+            <span class="collapse-icon">▼</span>
+            <span data-i18n="keywordSettings">キーワード設定</span>
+          </h3>
+          <div class="keyword-section-content" id="keywordSectionContent">
+            <!-- Include Keywords -->
+            <div class="keyword-group">
+              <label class="keyword-group-label" data-i18n="includeKeywords">含めるキーワード</label>
+              <div class="keyword-input-row">
+                <input
+                  type="text"
+                  id="includeKeywordInput"
+                  class="form-input keyword-input"
+                  placeholder="キーワードを入力..."
+                  data-i18n-placeholder="keywordPlaceholder"
+                  maxlength="50"
+                >
+                <button class="btn-add-keyword" id="addIncludeKeywordBtn" title="Add">
+                  ➕
+                </button>
+              </div>
+              <div class="keyword-tags-container" id="includeKeywordsList">
+                <p class="empty-keywords-message" data-i18n="noKeywordsYet">キーワードを追加してください</p>
+              </div>
+            </div>
+
+            <!-- Exclude Keywords -->
+            <div class="keyword-group">
+              <label class="keyword-group-label" data-i18n="excludeKeywords">除外するキーワード</label>
+              <div class="keyword-input-row">
+                <input
+                  type="text"
+                  id="excludeKeywordInput"
+                  class="form-input keyword-input"
+                  placeholder="キーワードを入力..."
+                  data-i18n-placeholder="keywordPlaceholder"
+                  maxlength="50"
+                >
+                <button class="btn-add-keyword" id="addExcludeKeywordBtn" title="Add">
+                  ➕
+                </button>
+              </div>
+              <div class="keyword-tags-container" id="excludeKeywordsList">
+                <p class="empty-keywords-message" data-i18n="noKeywordsYet">キーワードを追加してください</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Generation Settings -->
         <div class="subsection">
           <h3 class="subsection-title" data-i18n="generateSettings">生成設定</h3>

@@ -120,6 +120,22 @@ const translations = {
     invalidSettingsFile: "無効な設定ファイルです",
     generating: "生成中...",
 
+    // キーワード設定
+    keywordSettings: "キーワード設定",
+    includeKeywords: "含めるキーワード",
+    excludeKeywords: "除外するキーワード",
+    addKeyword: "追加",
+    editKeyword: "編集",
+    deleteKeyword: "削除",
+    saveKeyword: "保存",
+    cancelEdit: "キャンセル",
+    toggleKeyword: "有効/無効",
+    keywordPlaceholder: "キーワードを入力...",
+    keywordExists: "このキーワードは既に存在します",
+    keywordEmpty: "キーワードを入力してください",
+    keywordTooLong: "キーワードは50文字以内で入力してください",
+    noKeywordsYet: "キーワードを追加してください",
+
     // 年齢ラベル
     ageLabel: (age) => `${age}代`,
   },
@@ -238,6 +254,22 @@ const translations = {
     invalidSettingsFile: "Invalid settings file",
     generating: "Generating...",
 
+    // Keyword Settings
+    keywordSettings: "Keyword Settings",
+    includeKeywords: "Include Keywords",
+    excludeKeywords: "Exclude Keywords",
+    addKeyword: "Add",
+    editKeyword: "Edit",
+    deleteKeyword: "Delete",
+    saveKeyword: "Save",
+    cancelEdit: "Cancel",
+    toggleKeyword: "Toggle",
+    keywordPlaceholder: "Enter keyword...",
+    keywordExists: "This keyword already exists",
+    keywordEmpty: "Please enter a keyword",
+    keywordTooLong: "Keyword must be 50 characters or less",
+    noKeywordsYet: "Add keywords to get started",
+
     // Age Label
     ageLabel: (age) => `${age}s`,
   }
@@ -269,6 +301,12 @@ let messageTendency = {
 // Generation Settings
 let generationCount = 3;
 let messageType = 'random';
+
+// Keyword Settings
+let keywordData = {
+  include: [],
+  exclude: []
+};
 
 // Message Storage
 let messages = [];
@@ -361,6 +399,337 @@ function saveToLocalStorage() {
   localStorage.setItem('marogem_imageTheme', imageTheme);
 }
 
+// ===== Keyword Management Functions =====
+
+/**
+ * キーワードを追加
+ * @param {string} type - 'include' or 'exclude'
+ * @param {string} text - キーワードテキスト
+ * @returns {boolean} 追加成功かどうか
+ */
+function addKeyword(type, text) {
+  // バリデーション
+  const trimmedText = text.trim();
+
+  if (!trimmedText) {
+    showToast(t('keywordEmpty'));
+    return false;
+  }
+
+  if (trimmedText.length > 50) {
+    showToast(t('keywordTooLong'));
+    return false;
+  }
+
+  // 重複チェック（大文字小文字を区別しない）
+  const exists = keywordData[type].some(
+    kw => kw.text.toLowerCase() === trimmedText.toLowerCase()
+  );
+
+  if (exists) {
+    showToast(t('keywordExists'));
+    return false;
+  }
+
+  // キーワードを追加
+  const keyword = {
+    id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    text: trimmedText,
+    enabled: true,
+    createdAt: Date.now()
+  };
+
+  keywordData[type].push(keyword);
+
+  // UIを更新
+  renderKeywords(type);
+
+  // LocalStorageに保存
+  saveKeywordsToLocalStorage();
+
+  return true;
+}
+
+/**
+ * キーワードを更新
+ * @param {string} type - 'include' or 'exclude'
+ * @param {string} id - キーワードID
+ * @param {string} newText - 新しいテキスト
+ * @returns {boolean} 更新成功かどうか
+ */
+function updateKeyword(type, id, newText) {
+  const trimmedText = newText.trim();
+
+  if (!trimmedText) {
+    showToast(t('keywordEmpty'));
+    return false;
+  }
+
+  if (trimmedText.length > 50) {
+    showToast(t('keywordTooLong'));
+    return false;
+  }
+
+  // 重複チェック（自分自身は除外）
+  const exists = keywordData[type].some(
+    kw => kw.id !== id && kw.text.toLowerCase() === trimmedText.toLowerCase()
+  );
+
+  if (exists) {
+    showToast(t('keywordExists'));
+    return false;
+  }
+
+  // キーワードを更新
+  const keyword = keywordData[type].find(kw => kw.id === id);
+  if (keyword) {
+    keyword.text = trimmedText;
+    renderKeywords(type);
+    saveKeywordsToLocalStorage();
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * キーワードを削除
+ * @param {string} type - 'include' or 'exclude'
+ * @param {string} id - キーワードID
+ */
+function deleteKeyword(type, id) {
+  keywordData[type] = keywordData[type].filter(kw => kw.id !== id);
+  renderKeywords(type);
+  saveKeywordsToLocalStorage();
+}
+
+/**
+ * キーワードの有効/無効を切り替え
+ * @param {string} type - 'include' or 'exclude'
+ * @param {string} id - キーワードID
+ */
+function toggleKeyword(type, id) {
+  const keyword = keywordData[type].find(kw => kw.id === id);
+  if (keyword) {
+    keyword.enabled = !keyword.enabled;
+    renderKeywords(type);
+    saveKeywordsToLocalStorage();
+  }
+}
+
+/**
+ * キーワードをレンダリング
+ * @param {string} type - 'include' or 'exclude'
+ */
+function renderKeywords(type) {
+  const containerId = type === 'include' ? 'includeKeywordsList' : 'excludeKeywordsList';
+  const container = document.getElementById(containerId);
+
+  if (!container) return;
+
+  const keywords = keywordData[type];
+
+  // キーワードが0個の場合、空メッセージを表示
+  if (keywords.length === 0) {
+    container.innerHTML = `<p class="empty-keywords-message" data-i18n="noKeywordsYet">${t('noKeywordsYet')}</p>`;
+    return;
+  }
+
+  // キーワードタグを生成
+  container.innerHTML = keywords.map(keyword => {
+    const disabledClass = keyword.enabled ? '' : 'disabled';
+    const checkedAttr = keyword.enabled ? 'checked' : '';
+
+    return `
+      <div class="keyword-tag ${disabledClass}" data-keyword-id="${keyword.id}" data-type="${type}">
+        <span class="keyword-icon">🏷️</span>
+        <span class="keyword-text">${escapeHtml(keyword.text)}</span>
+        <div class="keyword-actions">
+          <input
+            type="checkbox"
+            class="keyword-checkbox"
+            ${checkedAttr}
+            onclick="toggleKeyword('${type}', '${keyword.id}')"
+            title="${t('toggleKeyword')}"
+          >
+          <button
+            class="keyword-btn"
+            onclick="startEditKeyword('${type}', '${keyword.id}')"
+            title="${t('editKeyword')}"
+          >
+            ✏️
+          </button>
+          <button
+            class="keyword-btn"
+            onclick="confirmDeleteKeyword('${type}', '${keyword.id}')"
+            title="${t('deleteKeyword')}"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * キーワードの編集を開始
+ * @param {string} type - 'include' or 'exclude'
+ * @param {string} id - キーワードID
+ */
+function startEditKeyword(type, id) {
+  const keyword = keywordData[type].find(kw => kw.id === id);
+  if (!keyword) return;
+
+  const tag = document.querySelector(`[data-keyword-id="${id}"]`);
+  if (!tag) return;
+
+  // 編集モードに切り替え
+  tag.classList.add('editing');
+
+  // テキストを入力欄に置き換え
+  const textSpan = tag.querySelector('.keyword-text');
+  const actionsDiv = tag.querySelector('.keyword-actions');
+
+  // チェックボックスと元のボタンを非表示
+  actionsDiv.innerHTML = '';
+
+  // 入力欄を追加
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'keyword-edit-input';
+  input.value = keyword.text;
+  input.maxLength = 50;
+
+  // 保存・キャンセルボタンを追加
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'keyword-btn keyword-btn-save';
+  saveBtn.innerHTML = '✓';
+  saveBtn.title = t('saveKeyword');
+  saveBtn.onclick = () => saveEditKeyword(type, id, input.value);
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'keyword-btn keyword-btn-cancel';
+  cancelBtn.innerHTML = '✕';
+  cancelBtn.title = t('cancelEdit');
+  cancelBtn.onclick = () => cancelEditKeyword(type);
+
+  // テキストの前に入力欄を追加
+  textSpan.insertAdjacentElement('afterend', input);
+  actionsDiv.appendChild(saveBtn);
+  actionsDiv.appendChild(cancelBtn);
+
+  // フォーカスして選択
+  input.focus();
+  input.select();
+
+  // Enterキーで保存
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      saveEditKeyword(type, id, input.value);
+    } else if (e.key === 'Escape') {
+      cancelEditKeyword(type);
+    }
+  });
+}
+
+/**
+ * キーワードの編集を保存
+ * @param {string} type - 'include' or 'exclude'
+ * @param {string} id - キーワードID
+ * @param {string} newText - 新しいテキスト
+ */
+function saveEditKeyword(type, id, newText) {
+  if (updateKeyword(type, id, newText)) {
+    // 編集成功
+  } else {
+    // 編集失敗（バリデーションエラー）- UIは変更しない
+    cancelEditKeyword(type);
+  }
+}
+
+/**
+ * キーワードの編集をキャンセル
+ * @param {string} type - 'include' or 'exclude'
+ */
+function cancelEditKeyword(type) {
+  renderKeywords(type);
+}
+
+/**
+ * キーワードの削除を確認して実行
+ * @param {string} type - 'include' or 'exclude'
+ * @param {string} id - キーワードID
+ */
+function confirmDeleteKeyword(type, id) {
+  const tag = document.querySelector(`[data-keyword-id="${id}"]`);
+  if (!tag) return;
+
+  // アニメーション付きで削除
+  tag.classList.add('removing');
+
+  setTimeout(() => {
+    deleteKeyword(type, id);
+  }, 300);
+}
+
+/**
+ * キーワードをLocalStorageに保存
+ */
+function saveKeywordsToLocalStorage() {
+  localStorage.setItem('marogem_keywords', JSON.stringify(keywordData));
+}
+
+/**
+ * キーワードをLocalStorageから読み込み
+ */
+function loadKeywordsFromLocalStorage() {
+  const saved = localStorage.getItem('marogem_keywords');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed.include && parsed.exclude) {
+        keywordData = parsed;
+        renderKeywords('include');
+        renderKeywords('exclude');
+      }
+    } catch (error) {
+      console.error('Failed to load keywords from localStorage:', error);
+    }
+  }
+}
+
+/**
+ * キーワードセクションの折りたたみを切り替え
+ */
+function toggleKeywordSection() {
+  const title = document.getElementById('keywordSectionTitle');
+  const content = document.getElementById('keywordSectionContent');
+
+  if (!title || !content) return;
+
+  const isCollapsed = title.classList.contains('collapsed');
+
+  if (isCollapsed) {
+    title.classList.remove('collapsed');
+    content.classList.remove('collapsed');
+  } else {
+    title.classList.add('collapsed');
+    content.classList.add('collapsed');
+  }
+}
+
+/**
+ * 有効なキーワードを取得
+ * @param {string} type - 'include' or 'exclude'
+ * @returns {Array<string>} 有効なキーワードのテキストの配列
+ */
+function getEnabledKeywords(type) {
+  return keywordData[type]
+    .filter(kw => kw.enabled)
+    .map(kw => kw.text);
+}
+
 // ===== i18n Functions =====
 
 /**
@@ -390,6 +759,10 @@ function updateUILanguage() {
   updateViewerHistoryLabel();
   updateEnthusiasmLabel();
   updateMessageTypeDescription();
+
+  // キーワードを再レンダリング（翻訳を反映）
+  renderKeywords('include');
+  renderKeywords('exclude');
 
   // 言語表示の更新
   document.getElementById('currentLang').textContent = currentLanguage.toUpperCase();
@@ -653,6 +1026,31 @@ ${existingTopics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
     // メッセージタイプの指示
     const messageTypeInstruction = getMessageTypePrompt(messageType, language);
 
+    // キーワード指示
+    let keywordInstruction = '';
+    const includeKeywords = getEnabledKeywords('include');
+    const excludeKeywords = getEnabledKeywords('exclude');
+
+    if (includeKeywords.length > 0) {
+      keywordInstruction += `
+【含めるべき話題・要素】
+以下のキーワードに関連する内容を含めてください：
+${includeKeywords.map(kw => `- ${kw}`).join('\n')}
+
+これらの話題について触れた質問や感想、リクエストなどを生成してください。
+`;
+    }
+
+    if (excludeKeywords.length > 0) {
+      keywordInstruction += `
+【除外すべき話題・要素】
+以下のキーワードに関連する内容は絶対に含めないでください：
+${excludeKeywords.map(kw => `- ${kw}`).join('\n')}
+
+これらの話題には一切触れないようにしてください。
+`;
+    }
+
     // 複数件生成時の多様性のヒント
     let varietyHint = '';
     if (totalCount > 1) {
@@ -676,7 +1074,7 @@ ${existingTopics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
 
 これらの記号を含むメッセージは完全に無効です。検出された場合は即座に拒否されます。
 ${messageTypeInstruction}
-
+${keywordInstruction}
 【ペルソナ情報】
 - 年齢：${ageLabel}
 - 性別：${t(persona.gender)}
@@ -775,6 +1173,32 @@ Avoid repeating similar content or expressions.
 `;
     }
 
+    // キーワード指示
+    const messageTypeInstruction = getMessageTypePrompt(messageType, language);
+    let keywordInstruction = '';
+    const includeKeywords = getEnabledKeywords('include');
+    const excludeKeywords = getEnabledKeywords('exclude');
+
+    if (includeKeywords.length > 0) {
+      keywordInstruction += `
+【Topics/Elements to Include】
+Please include content related to the following keywords:
+${includeKeywords.map(kw => `- ${kw}`).join('\n')}
+
+Generate questions, feedback, or requests that touch on these topics.
+`;
+    }
+
+    if (excludeKeywords.length > 0) {
+      keywordInstruction += `
+【Topics/Elements to Exclude】
+NEVER include content related to the following keywords:
+${excludeKeywords.map(kw => `- ${kw}`).join('\n')}
+
+Do not mention or refer to these topics at all.
+`;
+    }
+
     // 複数件生成時の多様性のヒント
     let varietyHint = '';
     if (totalCount > 1) {
@@ -798,7 +1222,7 @@ NEVER use the following placeholder symbols:
 
 Messages containing these symbols are COMPLETELY INVALID. They will be immediately rejected if detected.
 ${messageTypeInstruction}
-
+${keywordInstruction}
 【Persona Information】
 - Age: ${ageLabel}
 - Gender: ${genderMap[persona.gender]}
@@ -1257,6 +1681,10 @@ function exportSettings() {
       count: generationCount,
       messageType: messageType,
     },
+    keywords: {
+      include: [...keywordData.include],
+      exclude: [...keywordData.exclude],
+    },
     language: currentLanguage,
     theme: currentTheme,
   };
@@ -1362,6 +1790,25 @@ function applySettings(settings) {
     currentTheme = settings.theme;
     applyTheme();
     saveToLocalStorage();
+  }
+
+  // キーワード設定
+  if (settings.keywords) {
+    if (settings.keywords.include) {
+      keywordData.include = settings.keywords.include.map(kw => ({
+        ...kw,
+        id: kw.id || `include_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      }));
+    }
+    if (settings.keywords.exclude) {
+      keywordData.exclude = settings.keywords.exclude.map(kw => ({
+        ...kw,
+        id: kw.id || `exclude_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      }));
+    }
+    renderKeywords('include');
+    renderKeywords('exclude');
+    saveKeywordsToLocalStorage();
   }
 }
 
@@ -1520,6 +1967,57 @@ function initializeEventListeners() {
     // ファイル選択をリセット（同じファイルを再度選択可能にする）
     e.target.value = '';
   });
+
+  // キーワード管理
+  // 折りたたみ機能
+  const keywordSectionTitle = document.getElementById('keywordSectionTitle');
+  if (keywordSectionTitle) {
+    keywordSectionTitle.addEventListener('click', toggleKeywordSection);
+  }
+
+  // 含めるキーワードの追加
+  const includeKeywordInput = document.getElementById('includeKeywordInput');
+  const addIncludeKeywordBtn = document.getElementById('addIncludeKeywordBtn');
+
+  if (addIncludeKeywordBtn) {
+    addIncludeKeywordBtn.addEventListener('click', () => {
+      if (addKeyword('include', includeKeywordInput.value)) {
+        includeKeywordInput.value = '';
+      }
+    });
+  }
+
+  if (includeKeywordInput) {
+    includeKeywordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (addKeyword('include', includeKeywordInput.value)) {
+          includeKeywordInput.value = '';
+        }
+      }
+    });
+  }
+
+  // 除外するキーワードの追加
+  const excludeKeywordInput = document.getElementById('excludeKeywordInput');
+  const addExcludeKeywordBtn = document.getElementById('addExcludeKeywordBtn');
+
+  if (addExcludeKeywordBtn) {
+    addExcludeKeywordBtn.addEventListener('click', () => {
+      if (addKeyword('exclude', excludeKeywordInput.value)) {
+        excludeKeywordInput.value = '';
+      }
+    });
+  }
+
+  if (excludeKeywordInput) {
+    excludeKeywordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (addKeyword('exclude', excludeKeywordInput.value)) {
+          excludeKeywordInput.value = '';
+        }
+      }
+    });
+  }
 }
 
 // ===== Initialization =====
@@ -1530,6 +2028,9 @@ function initializeEventListeners() {
 function initializeApp() {
   // LocalStorageから設定を読み込み
   loadFromLocalStorage();
+
+  // キーワードをLocalStorageから読み込み
+  loadKeywordsFromLocalStorage();
 
   // テーマを適用
   applyTheme();
