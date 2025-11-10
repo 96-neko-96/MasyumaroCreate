@@ -409,6 +409,12 @@ ${diversityInstruction}
 - 絵文字は控えめに（0〜2個程度）
 - メッセージ本文のみを出力（説明や前置きは不要）${varietyHint}
 
+【重要な禁止事項】
+- 「○○さん」「○○が」「○○について」などのプレースホルダー表現は絶対に使用しない
+- 具体的な固有名詞を出す必要がある場合は、実際に存在しそうな自然な名前や事柄を使う
+- 不自然な「○○」の記号は一切使わない
+- 完成した自然な日本語のメッセージとして生成する
+
 メッセージ:
 `;
   } else {
@@ -473,6 +479,12 @@ ${diversityInstruction}
 - Adjust length based on length setting (50-300 characters approximately)
 - Use emojis sparingly (0-2)
 - Output only the message text (no explanations or preambles)${varietyHint}
+
+【IMPORTANT PROHIBITIONS】
+- NEVER use placeholder expressions like "XX" or "[something]"
+- If you need specific names or topics, use realistic natural examples
+- Do NOT use any placeholder symbols or markers
+- Generate complete, natural English messages only
 
 Message:
 `;
@@ -692,19 +704,70 @@ async function saveAsImage(messageId) {
   if (!messageCard) return;
 
   try {
-    const canvas = await html2canvas(messageCard, {
-      backgroundColor: currentTheme === 'light' ? '#FFE4E1' : '#2d2d44',
-      scale: 2,
+    // ボタンを一時的に非表示にする
+    const actionsDiv = messageCard.querySelector('.message-actions');
+    const originalDisplay = actionsDiv.style.display;
+    actionsDiv.style.display = 'none';
+
+    // メッセージカードをクローンして、専用のコンテナに配置
+    const clone = messageCard.cloneNode(true);
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed;
+      left: -9999px;
+      top: -9999px;
+      padding: 40px;
+      background: ${currentTheme === 'light' ? '#FFF5F7' : '#1a1a2e'};
+      width: 600px;
+      box-sizing: border-box;
+    `;
+
+    // クローンのスタイルを調整
+    clone.style.cssText = `
+      margin: 0;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    `;
+
+    // ボタンを削除
+    const cloneActions = clone.querySelector('.message-actions');
+    if (cloneActions) {
+      cloneActions.remove();
+    }
+
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    // html2canvasで高品質にキャプチャ
+    const canvas = await html2canvas(container, {
+      backgroundColor: currentTheme === 'light' ? '#FFF5F7' : '#1a1a2e',
+      scale: 3, // 高解像度
       logging: false,
+      useCORS: true,
+      allowTaint: true,
+      windowWidth: 600,
+      windowHeight: container.scrollHeight,
     });
 
+    // コンテナを削除
+    document.body.removeChild(container);
+
+    // ボタンを再表示
+    actionsDiv.style.display = originalDisplay;
+
+    // 画像をダウンロード
     const link = document.createElement('a');
-    link.download = `maro-message-${messageId}.png`;
+    link.download = `marogem-message-${messageId}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   } catch (error) {
     console.error('Failed to save as image:', error);
     showToast('画像の保存に失敗しました');
+
+    // エラー時もボタンを再表示
+    const actionsDiv = messageCard.querySelector('.message-actions');
+    if (actionsDiv) {
+      actionsDiv.style.display = '';
+    }
   }
 }
 
