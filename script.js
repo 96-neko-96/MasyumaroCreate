@@ -63,6 +63,12 @@ const translations = {
     count: "生成件数",
     generateButton: "🎲 メッセージを生成",
 
+    // UI設定
+    uiSettings: "表示設定",
+    uiTheme: "UIテーマ",
+    uiThemeLight: "ライト",
+    uiThemeDark: "ダーク",
+
     // 画像保存設定
     imageSettings: "画像保存設定",
     imageTheme: "画像のテーマ",
@@ -147,6 +153,12 @@ const translations = {
     generateSettings: "Generation Settings",
     count: "Count",
     generateButton: "🎲 Generate Messages",
+
+    // UI Settings
+    uiSettings: "Display Settings",
+    uiTheme: "UI Theme",
+    uiThemeLight: "Light",
+    uiThemeDark: "Dark",
 
     // Image Settings
     imageSettings: "Image Export Settings",
@@ -263,6 +275,12 @@ function loadFromLocalStorage() {
   const savedTheme = localStorage.getItem('marogem_theme');
   if (savedTheme) {
     currentTheme = savedTheme;
+  }
+
+  // UIテーマのラジオボタンを初期化
+  const uiThemeRadio = document.querySelector(`input[name="uiTheme"][value="${currentTheme}"]`);
+  if (uiThemeRadio) {
+    uiThemeRadio.checked = true;
   }
 
   // 画像テーマ設定
@@ -1114,6 +1132,15 @@ function initializeEventListeners() {
   // 生成件数入力
   document.getElementById('countInput').addEventListener('input', (e) => {
     generationCount = parseInt(e.target.value);
+  });
+
+  // UIテーマ選択
+  document.querySelectorAll('input[name="uiTheme"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      currentTheme = e.target.value;
+      applyTheme();
+      saveToLocalStorage();
+    });
   });
 
   // 画像テーマ選択
