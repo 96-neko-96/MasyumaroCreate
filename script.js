@@ -398,6 +398,38 @@ ${existingTopics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
 - 距離感：${settings.distance}/5（1=遠慮がち、5=フレンドリー）
 - 文章量：${settings.length}/5（1=短文、5=長文）
 ${diversityInstruction}
+【実際のマシュマロメッセージの良い例】
+以下のような自然で具体的なメッセージを参考にしてください：
+
+応援・感想系：
+「いつも配信楽しみにしています！昨日のゲーム実況、めちゃくちゃ面白かったです」
+「最近配信で話してた料理、今日作ってみました。美味しかったです！」
+「雨の日の配信、落ち着いた雰囲気で良かったです。また聞きたいな」
+
+質問・相談系：
+「配信で使ってるマイクって何ですか？音質すごく良いですよね」
+「最近仕事で悩んでて…配信聞いてると元気もらえます」
+「おすすめのホラーゲームあったら教えてほしいです」
+
+日常共有・雑談系：
+「今日電車で寝過ごしました。配信の話を思い出して笑ってしまった」
+「コンビニで新作のお菓子見つけたんですけど、前に配信で言ってたやつでした」
+「最近寒くなってきましたね。体調には気をつけてください」
+
+ネタ・軽め系：
+「配信中の猫ちゃん、完全に寝てましたよねw」
+「その髪型めっちゃ似合ってます！でも寝癖かと思いました（笑）」
+「今日のサムネ、ちょっと盛りすぎじゃないですか？w」
+
+【絶対にやってはいけない悪い例】
+❌「○○さんの配信いつも見てます」
+❌「○○が気になっていて質問したいです」
+❌「○○について教えてください」
+❌「最近○○にハマってます」
+❌「○○のゲーム実況してほしいです」
+
+上記のような「○○」という記号を含む文章は絶対に生成しないでください。
+
 【生成条件】
 - 日本語で生成してください
 - マシュマロの匿名メッセージとして自然な文章
@@ -408,12 +440,8 @@ ${diversityInstruction}
 - 文章量の設定に応じて50〜300文字程度で調整
 - 絵文字は控えめに（0〜2個程度）
 - メッセージ本文のみを出力（説明や前置きは不要）${varietyHint}
-
-【重要な禁止事項】
-- 「○○さん」「○○が」「○○について」などのプレースホルダー表現は絶対に使用しない
-- 具体的な固有名詞を出す必要がある場合は、実際に存在しそうな自然な名前や事柄を使う
-- 不自然な「○○」の記号は一切使わない
-- 完成した自然な日本語のメッセージとして生成する
+- 具体的な内容で、実際に送られそうな自然なメッセージにする
+- 「○」「●」「□」「■」などの記号で固有名詞を隠すような表現は一切使用しない
 
 メッセージ:
 `;
@@ -469,6 +497,38 @@ You are a viewer of a live stream. Based on the following persona information, g
 - Distance: ${settings.distance}/5 (1=reserved, 5=friendly)
 - Length: ${settings.length}/5 (1=short, 5=long)
 ${diversityInstruction}
+【GOOD EXAMPLES of Real Marshmallow Messages】
+Reference these natural and specific messages:
+
+Support/Feedback:
+"I always look forward to your streams! Yesterday's gameplay was hilarious"
+"I tried that recipe you mentioned on stream. It turned out amazing!"
+"The rainy day stream had such a cozy vibe. Would love more like that"
+
+Questions/Advice:
+"What microphone do you use? The audio quality is really good"
+"I've been struggling with work lately... your streams always cheer me up"
+"Any horror game recommendations? I trust your taste"
+
+Casual Sharing:
+"I fell asleep on the train today and woke up thinking about your stream lol"
+"Saw that new snack at the store you mentioned. Had to try it"
+"It's getting cold here. Hope you're staying warm!"
+
+Playful/Funny:
+"Your cat was completely passed out during the stream lmao"
+"That new hairstyle looks great! Though I thought it was bedhead at first haha"
+"Today's thumbnail is a bit much, don't you think? 😂"
+
+【BAD EXAMPLES - NEVER DO THIS】
+❌ "I love watching XX stream"
+❌ "I wanted to ask about XX"
+❌ "Please play XX game"
+❌ "I'm interested in XX topic"
+❌ "Tell me about XX"
+
+NEVER generate messages with "XX", "[something]", or similar placeholder symbols.
+
 【Generation Requirements】
 - Write in English
 - Natural message as anonymous feedback
@@ -479,12 +539,8 @@ ${diversityInstruction}
 - Adjust length based on length setting (50-300 characters approximately)
 - Use emojis sparingly (0-2)
 - Output only the message text (no explanations or preambles)${varietyHint}
-
-【IMPORTANT PROHIBITIONS】
-- NEVER use placeholder expressions like "XX" or "[something]"
-- If you need specific names or topics, use realistic natural examples
-- Do NOT use any placeholder symbols or markers
-- Generate complete, natural English messages only
+- Be specific and concrete - write messages that sound real
+- Do NOT use "○", "●", "□", "■", "XX", or any placeholder symbols
 
 Message:
 `;
