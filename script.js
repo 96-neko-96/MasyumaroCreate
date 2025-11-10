@@ -431,6 +431,17 @@ ${existingTopics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
     return `
 あなたは配信の視聴者です。以下のペルソナ情報に基づいて、配信者に送るマシュマロ（匿名メッセージ）を1件だけ生成してください。
 
+【🚨 最重要警告 🚨】
+以下の記号を絶対に使用しないでください：
+❌ ○ (まる)
+❌ 〇 (全角ゼロ)
+❌ ● (黒丸)
+❌ □ (四角)
+❌ ■ (黒四角)
+❌ XX や [〜] などのプレースホルダー
+
+これらの記号を含むメッセージは完全に無効です。検出された場合は即座に拒否されます。
+
 【ペルソナ情報】
 - 年齢：${ageLabel}
 - 性別：${t(persona.gender)}
@@ -441,37 +452,43 @@ ${existingTopics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
 - 距離感：${settings.distance}/5（1=遠慮がち、5=フレンドリー）
 - 文章量：${settings.length}/5（1=短文、5=長文）
 ${diversityInstruction}
-【実際のマシュマロメッセージの良い例】
+【✅ 実際のマシュマロメッセージの良い例】
 以下のような自然で具体的なメッセージを参考にしてください：
 
 応援・感想系：
 「いつも配信楽しみにしています！昨日のゲーム実況、めちゃくちゃ面白かったです」
 「最近配信で話してた料理、今日作ってみました。美味しかったです！」
 「雨の日の配信、落ち着いた雰囲気で良かったです。また聞きたいな」
+「前回のホラーゲーム実況、リアクション最高でした！続きが気になります」
 
 質問・相談系：
 「配信で使ってるマイクって何ですか？音質すごく良いですよね」
 「最近仕事で悩んでて…配信聞いてると元気もらえます」
 「おすすめのホラーゲームあったら教えてほしいです」
+「編集ソフトって何使ってますか？参考にしたくて」
 
 日常共有・雑談系：
 「今日電車で寝過ごしました。配信の話を思い出して笑ってしまった」
 「コンビニで新作のお菓子見つけたんですけど、前に配信で言ってたやつでした」
 「最近寒くなってきましたね。体調には気をつけてください」
+「今朝カフェで配信のこと考えてニヤけてしまいました笑」
 
 ネタ・軽め系：
 「配信中の猫ちゃん、完全に寝てましたよねw」
 「その髪型めっちゃ似合ってます！でも寝癖かと思いました（笑）」
 「今日のサムネ、ちょっと盛りすぎじゃないですか？w」
+「昨日の配信、終了時刻に気づかず延長してましたよね笑」
 
-【絶対にやってはいけない悪い例】
-❌「○○さんの配信いつも見てます」
-❌「○○が気になっていて質問したいです」
-❌「○○について教えてください」
-❌「最近○○にハマってます」
-❌「○○のゲーム実況してほしいです」
+【❌ 絶対禁止の悪い例】
+以下のようなプレースホルダー記号を含む文章は絶対に生成しないでください：
+❌「○○さんの配信いつも見てます」→ 配信者を特定の名前で呼ばない
+❌「○○が気になっていて質問したいです」→ 具体的な話題を明示する
+❌「○○について教えてください」→ 何について聞きたいか具体的に書く
+❌「最近○○にハマってます」→ 何にハマっているか具体的に書く
+❌「○○のゲーム実況してほしいです」→ ゲーム名を具体的に書く
+❌「〇〇さんみたいに上手くできなかった」→ 「そんなに上手くできなかった」等に言い換え
 
-上記のような「○○」という記号を含む文章は絶対に生成しないでください。
+配信者への呼びかけは省略するか、「配信」「あなた」「そちら」等の一般的な表現を使用してください。
 
 【生成条件】
 - 日本語で生成してください
@@ -484,7 +501,12 @@ ${diversityInstruction}
 - 絵文字は控えめに（0〜2個程度）
 - メッセージ本文のみを出力（説明や前置きは不要）${varietyHint}
 - 具体的な内容で、実際に送られそうな自然なメッセージにする
-- 「○」「●」「□」「■」などの記号で固有名詞を隠すような表現は一切使用しない
+- 配信者の名前を特定せず、「配信」「あなた」などの一般的表現を使う
+- 記号（○ 〇 ● □ ■）を一切使用しない - これは最優先ルールです
+
+【最終確認】
+生成したメッセージに ○ 〇 ● □ ■ XX などの記号が含まれていないことを必ず確認してください。
+含まれている場合は、そのメッセージを破棄して別のメッセージを生成してください。
 
 メッセージ:
 `;
@@ -530,6 +552,17 @@ Avoid repeating similar content or expressions.
     return `
 You are a viewer of a live stream. Based on the following persona information, generate ONE anonymous message (like Marshmallow) to send to the streamer.
 
+【🚨 CRITICAL WARNING 🚨】
+NEVER use the following placeholder symbols:
+❌ ○ (circle)
+❌ 〇 (full-width zero)
+❌ ● (filled circle)
+❌ □ (square)
+❌ ■ (filled square)
+❌ XX or [~] or any placeholder symbols
+
+Messages containing these symbols are COMPLETELY INVALID. They will be immediately rejected if detected.
+
 【Persona Information】
 - Age: ${ageLabel}
 - Gender: ${genderMap[persona.gender]}
@@ -540,37 +573,43 @@ You are a viewer of a live stream. Based on the following persona information, g
 - Distance: ${settings.distance}/5 (1=reserved, 5=friendly)
 - Length: ${settings.length}/5 (1=short, 5=long)
 ${diversityInstruction}
-【GOOD EXAMPLES of Real Marshmallow Messages】
+【✅ GOOD EXAMPLES of Real Marshmallow Messages】
 Reference these natural and specific messages:
 
 Support/Feedback:
 "I always look forward to your streams! Yesterday's gameplay was hilarious"
 "I tried that recipe you mentioned on stream. It turned out amazing!"
 "The rainy day stream had such a cozy vibe. Would love more like that"
+"That horror game playthrough was epic! Can't wait for the next part"
 
 Questions/Advice:
 "What microphone do you use? The audio quality is really good"
 "I've been struggling with work lately... your streams always cheer me up"
 "Any horror game recommendations? I trust your taste"
+"What editing software do you use? Trying to learn"
 
 Casual Sharing:
 "I fell asleep on the train today and woke up thinking about your stream lol"
 "Saw that new snack at the store you mentioned. Had to try it"
 "It's getting cold here. Hope you're staying warm!"
+"Was at a cafe this morning and caught myself smiling thinking about the stream"
 
 Playful/Funny:
 "Your cat was completely passed out during the stream lmao"
 "That new hairstyle looks great! Though I thought it was bedhead at first haha"
 "Today's thumbnail is a bit much, don't you think? 😂"
+"You totally lost track of time and went over schedule yesterday lol"
 
-【BAD EXAMPLES - NEVER DO THIS】
-❌ "I love watching XX stream"
-❌ "I wanted to ask about XX"
-❌ "Please play XX game"
-❌ "I'm interested in XX topic"
-❌ "Tell me about XX"
+【❌ FORBIDDEN BAD EXAMPLES】
+NEVER generate placeholder-based messages like these:
+❌ "I love watching XX stream" → Don't use specific names
+❌ "I wanted to ask about XX" → Be specific about the topic
+❌ "Please play XX game" → Specify the actual game name
+❌ "I'm interested in XX topic" → State what topic specifically
+❌ "Tell me about XX" → Ask about something concrete
+❌ "You're better than XX at this" → Use "better than me" or similar
 
-NEVER generate messages with "XX", "[something]", or similar placeholder symbols.
+Refer to the streamer using general terms like "your stream", "you", "the channel", etc.
 
 【Generation Requirements】
 - Write in English
@@ -583,7 +622,12 @@ NEVER generate messages with "XX", "[something]", or similar placeholder symbols
 - Use emojis sparingly (0-2)
 - Output only the message text (no explanations or preambles)${varietyHint}
 - Be specific and concrete - write messages that sound real
-- Do NOT use "○", "●", "□", "■", "XX", or any placeholder symbols
+- Don't specify the streamer's name - use general terms like "your stream" or "you"
+- Do NOT use symbols (○ 〇 ● □ ■ XX) - this is the TOP PRIORITY rule
+
+【FINAL CHECK】
+Before outputting, verify your message does NOT contain: ○ 〇 ● □ ■ XX or any placeholder symbols.
+If it does, discard it and generate a different message.
 
 Message:
 `;
@@ -591,7 +635,23 @@ Message:
 }
 
 /**
- * メッセージを生成（1件）
+ * メッセージにプレースホルダー記号が含まれているかチェック
+ * @param {string} text - チェックするテキスト
+ * @returns {boolean} プレースホルダーが含まれている場合はtrue
+ */
+function containsPlaceholders(text) {
+  // 禁止記号: ○, 〇（全角ゼロ）, ●, □, ■, XX, xx
+  const placeholderPatterns = [
+    /[○〇●□■]/,  // 日本語の記号
+    /\bXX\b/i,     // XX (大文字小文字問わず)
+    /\[.*?\]/,     // [something] のような表記
+  ];
+
+  return placeholderPatterns.some(pattern => pattern.test(text));
+}
+
+/**
+ * メッセージを生成（1件）- プレースホルダー検証付き
  * @param {Array<string>} existingTopics - 既存のトピックリスト
  * @param {number} messageNumber - メッセージ番号
  * @param {number} totalCount - 生成する総数
@@ -602,50 +662,80 @@ async function generateSingleMessage(existingTopics = [], messageNumber = 1, tot
     throw new Error('API initialization failed');
   }
 
-  const prompt = generatePrompt(existingTopics, messageNumber, totalCount);
+  const maxRetries = 3;
+  let lastError = null;
 
-  // Gemini API REST エンドポイント
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+  // 最大3回までリトライ
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const prompt = generatePrompt(existingTopics, messageNumber, totalCount);
 
-  const requestBody = {
-    contents: [{
-      parts: [{
-        text: prompt
-      }]
-    }],
-    generationConfig: {
-      temperature: 0.9,
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 1024,
+      // Gemini API REST エンドポイント
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+      const requestBody = {
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.9,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        }
+      };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // レスポンスからテキストを抽出
+      if (data.candidates && data.candidates.length > 0) {
+        const candidate = data.candidates[0];
+        if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+          const generatedText = candidate.content.parts[0].text.trim();
+
+          // プレースホルダー検証
+          if (containsPlaceholders(generatedText)) {
+            console.warn(`Attempt ${attempt + 1}: Generated message contains placeholders. Retrying...`);
+            console.warn(`Rejected message: ${generatedText.substring(0, 100)}...`);
+
+            // リトライ前に少し待機
+            await new Promise(resolve => setTimeout(resolve, 500));
+            continue;
+          }
+
+          // 検証OK - メッセージを返す
+          return generatedText;
+        }
+      }
+
+      throw new Error('No content generated');
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries - 1) {
+        console.warn(`Attempt ${attempt + 1} failed:`, error.message);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
-  };
-
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody)
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error('API Error:', errorData);
-    throw new Error(`API request failed: ${response.status}`);
   }
 
-  const data = await response.json();
-
-  // レスポンスからテキストを抽出
-  if (data.candidates && data.candidates.length > 0) {
-    const candidate = data.candidates[0];
-    if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-      return candidate.content.parts[0].text.trim();
-    }
-  }
-
-  throw new Error('No content generated');
+  // 全てのリトライが失敗
+  throw new Error(`Failed after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`);
 }
 
 /**
