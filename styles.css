@@ -655,6 +655,282 @@ body {
   min-height: 16px;
 }
 
+/* ===== Keyword Management ===== */
+
+/* Collapsible Section Title */
+.subsection-title.collapsible {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  transition: color var(--transition-fast);
+}
+
+.subsection-title.collapsible:hover {
+  color: var(--accent-hover);
+}
+
+.collapse-icon {
+  display: inline-block;
+  transition: transform var(--transition-fast);
+  font-size: 12px;
+}
+
+.subsection-title.collapsed .collapse-icon {
+  transform: rotate(-90deg);
+}
+
+.keyword-section-content {
+  max-height: 800px;
+  overflow: hidden;
+  transition: max-height var(--transition-normal), opacity var(--transition-normal);
+  opacity: 1;
+}
+
+.keyword-section-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Keyword Group */
+.keyword-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.keyword-group-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+}
+
+/* Keyword Input Row */
+.keyword-input-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.keyword-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-add-keyword {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  background-color: var(--accent);
+  color: white;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 16px;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-add-keyword:hover {
+  background-color: var(--accent-hover);
+  transform: scale(1.05);
+}
+
+.btn-add-keyword:active {
+  transform: scale(0.95);
+}
+
+/* Keyword Tags Container */
+.keyword-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  min-height: 80px;
+  max-height: 200px;
+  overflow-y: auto;
+  transition: background-color var(--transition-normal);
+}
+
+.empty-keywords-message {
+  width: 100%;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-style: italic;
+  margin: auto 0;
+}
+
+/* Keyword Tag */
+.keyword-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--accent);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+  transition: all var(--transition-fast);
+  animation: keywordFadeIn 0.3s ease;
+  max-width: 100%;
+}
+
+@keyframes keywordFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes keywordFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.keyword-tag.removing {
+  animation: keywordFadeOut 0.3s ease forwards;
+}
+
+.keyword-tag.disabled {
+  background-color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.keyword-tag:hover:not(.editing) {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.keyword-tag.disabled:hover {
+  background-color: var(--text-secondary);
+}
+
+/* Keyword Tag Icon/Emoji */
+.keyword-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Keyword Text */
+.keyword-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.keyword-tag.editing .keyword-text {
+  display: none;
+}
+
+/* Keyword Edit Input */
+.keyword-edit-input {
+  flex: 1;
+  padding: 2px 4px;
+  border: 1px solid white;
+  border-radius: 3px;
+  background-color: white;
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: var(--font-size-small);
+  min-width: 60px;
+}
+
+.keyword-edit-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+/* Keyword Actions */
+.keyword-actions {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.keyword-tag.editing .keyword-actions {
+  gap: 4px;
+}
+
+.keyword-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  font-size: 14px;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+.keyword-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.keyword-btn:active {
+  transform: scale(0.9);
+}
+
+.keyword-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: white;
+}
+
+.keyword-checkbox:hover {
+  transform: scale(1.1);
+}
+
+/* Edit Mode Buttons */
+.keyword-btn-save {
+  color: #4CAF50;
+  font-weight: bold;
+  background-color: white;
+  border-radius: 3px;
+}
+
+.keyword-btn-save:hover {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.keyword-btn-cancel {
+  color: #f44336;
+  font-weight: bold;
+  background-color: white;
+  border-radius: 3px;
+}
+
+.keyword-btn-cancel:hover {
+  background-color: #f44336;
+  color: white;
+}
+
 /* ===== Utility Classes ===== */
 .hidden {
   display: none !important;
