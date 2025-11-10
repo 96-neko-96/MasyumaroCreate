@@ -63,6 +63,12 @@ const translations = {
     count: "生成件数",
     generateButton: "🎲 メッセージを生成",
 
+    // 画像保存設定
+    imageSettings: "画像保存設定",
+    imageTheme: "画像のテーマ",
+    imageThemeLight: "ライト",
+    imageThemeDark: "ダーク",
+
     // メッセージカード
     copyMessage: "📋 コピー",
     saveAsImage: "📷 画像保存",
@@ -142,6 +148,12 @@ const translations = {
     count: "Count",
     generateButton: "🎲 Generate Messages",
 
+    // Image Settings
+    imageSettings: "Image Export Settings",
+    imageTheme: "Image Theme",
+    imageThemeLight: "Light",
+    imageThemeDark: "Dark",
+
     // Message Card
     copyMessage: "📋 Copy",
     saveAsImage: "📷 Save as Image",
@@ -168,6 +180,7 @@ const translations = {
 // ===== Global State =====
 let currentLanguage = 'ja';
 let currentTheme = 'light';
+let imageTheme = 'light'; // 画像保存時のテーマ
 let apiKey = '';
 let modelName = 'gemini-2.0-flash-exp';
 
@@ -251,6 +264,17 @@ function loadFromLocalStorage() {
   if (savedTheme) {
     currentTheme = savedTheme;
   }
+
+  // 画像テーマ設定
+  const savedImageTheme = localStorage.getItem('marogem_imageTheme');
+  if (savedImageTheme) {
+    imageTheme = savedImageTheme;
+    // UIに反映
+    const imageThemeRadio = document.querySelector(`input[name="imageTheme"][value="${imageTheme}"]`);
+    if (imageThemeRadio) {
+      imageThemeRadio.checked = true;
+    }
+  }
 }
 
 /**
@@ -261,6 +285,7 @@ function saveToLocalStorage() {
   localStorage.setItem('marogem_model', modelName);
   localStorage.setItem('marogem_language', currentLanguage);
   localStorage.setItem('marogem_theme', currentTheme);
+  localStorage.setItem('marogem_imageTheme', imageTheme);
 }
 
 // ===== i18n Functions =====
@@ -767,13 +792,31 @@ async function saveAsImage(messageId) {
 
     // メッセージカードをクローンして、専用のコンテナに配置
     const clone = messageCard.cloneNode(true);
+
+    // ペルソナ情報（message-meta）を削除
+    const cloneMeta = clone.querySelector('.message-meta');
+    if (cloneMeta) {
+      cloneMeta.remove();
+    }
+
+    // ボタンを削除
+    const cloneActions = clone.querySelector('.message-actions');
+    if (cloneActions) {
+      cloneActions.remove();
+    }
+
+    // 画像保存用のテーマ設定に基づいて背景色を決定
+    const bgColor = imageTheme === 'light' ? '#FFF5F7' : '#1a1a2e';
+    const cardBgColor = imageTheme === 'light' ? '#FFE4E1' : '#2d2d44';
+    const textColor = imageTheme === 'light' ? '#333333' : '#eaeaea';
+
     const container = document.createElement('div');
     container.style.cssText = `
       position: fixed;
       left: -9999px;
       top: -9999px;
       padding: 40px;
-      background: ${currentTheme === 'light' ? '#FFF5F7' : '#1a1a2e'};
+      background: ${bgColor};
       width: 600px;
       box-sizing: border-box;
     `;
@@ -782,12 +825,15 @@ async function saveAsImage(messageId) {
     clone.style.cssText = `
       margin: 0;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      background-color: ${cardBgColor};
+      border-radius: 16px;
+      padding: 24px;
     `;
 
-    // ボタンを削除
-    const cloneActions = clone.querySelector('.message-actions');
-    if (cloneActions) {
-      cloneActions.remove();
+    // メッセージテキストの色を調整
+    const cloneText = clone.querySelector('.message-text');
+    if (cloneText) {
+      cloneText.style.color = textColor;
     }
 
     container.appendChild(clone);
@@ -795,7 +841,7 @@ async function saveAsImage(messageId) {
 
     // html2canvasで高品質にキャプチャ
     const canvas = await html2canvas(container, {
-      backgroundColor: currentTheme === 'light' ? '#FFF5F7' : '#1a1a2e',
+      backgroundColor: bgColor,
       scale: 3, // 高解像度
       logging: false,
       useCORS: true,
@@ -1068,6 +1114,14 @@ function initializeEventListeners() {
   // 生成件数入力
   document.getElementById('countInput').addEventListener('input', (e) => {
     generationCount = parseInt(e.target.value);
+  });
+
+  // 画像テーマ選択
+  document.querySelectorAll('input[name="imageTheme"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      imageTheme = e.target.value;
+      saveToLocalStorage();
+    });
   });
 
   // メッセージ生成ボタン
